@@ -21,8 +21,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 import scipy
+import scipy.misc
 from scipy.optimize import minimize
 import time
+from mpl_toolkits.mplot3d import Axes3D
 
 #%% MRE
 def similarity(v1,v2,sigmaSquared=None):
@@ -36,7 +38,7 @@ def similarity(v1,v2,sigmaSquared=None):
 
 
 def similarity_matrix(Y,sigmaSquared=None):
-    '''Y: N*ft matrix
+    '''Y: N*ft matrix. 
     sigmaSquared:neighborhood variance, aka kernel bandwidth'''
     m = np.zeros((Y.shape[0],Y.shape[0]))
     for i in range(Y.shape[0]):
@@ -57,8 +59,9 @@ def calc_Qc(Rc,X):
     
 
 def KL(Pc,Qc):
-    """ return mean KL divergence
-    Epsilon added so neither P nor Q is equal to 0. """
+    """ return mean KL divergence. Epsilon added so no Qc is 0 
+    
+    from Q to P.. the amount of information lost when Q is used to approximate P"""
     epsilon = 0.00001
 
     vPc = Pc.copy().flatten()+epsilon
@@ -68,7 +71,7 @@ def KL(Pc,Qc):
 
 
 def calc_Ec(Pc,Qc):
-    '''KL-divergence '''
+    '''KL-divergence between matrices Pc and Qc '''
     assert(np.allclose(np.sum(Qc,axis=1),1))
     assert(np.allclose(np.sum(Pc,axis=1),1))
     return KL(Pc,Qc)
@@ -78,18 +81,32 @@ def calc_E(vRcX,P,ndim):
     '''P: dictionary of similarity matrices'''
     mRcX = np.reshape(vRcX,(P['LL'].shape[0]+len(P),ndim))
     X = mRcX[len(P):,:]
+    
+    plot3d(X)
     Ecs = []
+#    mRc = np.array([[1.8,.5,-2],[0,-2,0]]) # fix Rc to stabilize projection
     for i,(n,Pc) in enumerate(P.items()):
         Rc = np.diag(mRcX[i,:])
+#        penalty = np.sum([np.abs(mRcX[i,:]-1) for j in range(len(mRcX[i,:]))])
+#        Rc = np.diag(mRc[i,:])
         Qc = calc_Qc(Rc,X)
         Ecs.append(calc_Ec(Pc,Qc))
     sumLec = np.sum(Ecs)
     print(sumLec)
-    return sumLec
+    return sumLec#+penalty
 
     
 def colorbar():
     plt.colorbar(fraction=0.046, pad=0.04)
+    
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+def plot3d(X,ax=ax):
+    if np.random.rand(1)>.9:
+        plt.cla()
+        ax.scatter(X[:,0], X[:,1], X[:,2])
+        plt.show();plt.pause(.01)
     
     
 #%% create "P"
@@ -105,10 +122,10 @@ plt.close('all')
 if plots[0]:
     plt.figure(figsize=(17,9))
     
-carNumbs = [69,8,15,19,23,27,6,76,91,100,][:nCars] # 11 is a cup with different 'zoom' factor.
+carNumbs = [29,69,8,15,19,23,27,6,76,91,100,][:nCars] # 4 is a tomato. detail, but no zoom
 f = '/home/kurtb/Dropbox/code/multiple_relation_embed/coil-100_grey'
 resf = '/home/kurtb/Dropbox/code/multiple_relation_embed/res'
-imTemplate = scipy.misc.imread('/home/kurtb/Dropbox/code/multiple_relation_embed/coil-100_grey/obj76__0.png')[:,:,0]
+imTemplate = scipy.misc.imread('/home/kurtb/Dropbox/code/multiple_relation_embed/coil-100_grey/obj76__000.png')[:,:,0]
 
 print(carNumbs)
 
@@ -124,7 +141,7 @@ for icar,car in enumerate(carNumbs):
         i+=1
         im = scipy.misc.imread(p).mean(axis=2)#[:,:,0]
         if plots[0]:
-            plt.subplot(nCars,len(ps),i+1);plt.imshow(im)
+            plt.subplot(nCars,len(ps),i+1);plt.imshow(im,cmap='gray')
         Y[i,:] = im.flatten()
 
 plt.pause(.01)
@@ -157,7 +174,7 @@ ndim = 3 # of latent space
         
 vRcX = (1+np.random.randn(P['LL'].shape[0]+len(P),ndim).flatten())*(1/ndim) # random init
 
-res = minimize(calc_E,vRcX,args=(P,ndim),options={'maxiter':5,'disp':True},
+res = minimize(calc_E,vRcX,args=(P,ndim),options={'maxiter':200,'disp':True},
                method='Powell')
 
 mRcX = np.reshape(res.x,(P['LL'].shape[0]+len(P),ndim))
@@ -173,7 +190,7 @@ if save:
 
 #%% plot
 #from mpl_toolkits.mplot3d import Axes3D
-cs = np.array(list(range(nViews))*nCars)
+#cs = np.array(list(range(nViews))*nCars)
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(X[:,0], X[:,1], X[:,2])#,c=cs,cmap=sns.color_palette("GnBu_d"))
