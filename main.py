@@ -100,13 +100,7 @@ def colorbar():
     plt.colorbar(fraction=0.046, pad=0.04)
     
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-def plot3d(X,ax=ax):
-    if np.random.rand(1)>.9:
-        plt.cla()
-        ax.scatter(X[:,0], X[:,1], X[:,2])
-        plt.show();plt.pause(.01)
+
     
     
 #%% create "P"
@@ -122,7 +116,7 @@ plt.close('all')
 if plots[0]:
     plt.figure(figsize=(17,9))
     
-carNumbs = [29,69,8,15,19,23,27,6,76,91,100,][:nCars] # 4 is a tomato. detail, but no zoom
+carNumbs = [69,8,15,19,23,27,6,76,91,100,][:nCars] # 29 is not a car, rotate, but no zoom
 f = '/home/kurtb/Dropbox/code/multiple_relation_embed/coil-100_grey'
 resf = '/home/kurtb/Dropbox/code/multiple_relation_embed/res'
 imTemplate = scipy.misc.imread('/home/kurtb/Dropbox/code/multiple_relation_embed/coil-100_grey/obj76__000.png')[:,:,0]
@@ -163,12 +157,23 @@ if plots[1]:
     plt.figure()
     for i,(n,m) in enumerate(P.items()):
         plt.subplot(1,2,i+1);plt.imshow(m,cmap='viridis'); colorbar(); plt.title(n)
-    plt.pause(.1)
     plt.tight_layout()
+    plt.suptitle('Similarity Matrices')
+    plt.pause(.1)
 
 if save:
     plt.savefig(resf+'/P_%s.png'%timeMarker) 
+   
+#%%
     
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+def plot3d(X,ax=ax):
+    if np.random.rand(1)>.9:
+        plt.cla()
+        ax.scatter(X[:,0], X[:,1], X[:,2])
+        plt.show();plt.pause(.01)
+        
 #%% fit
 ndim = 3 # of latent space
         
