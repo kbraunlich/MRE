@@ -5,5 +5,3 @@ in@inproceedings{memisevic2005multiple,
   pages={913--920},
   year={2005}
 }
-
-hard-coded paths ln. ~109
