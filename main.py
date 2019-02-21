@@ -150,7 +150,7 @@ for i in range(P_LL.shape[0]):
         
                     
 assert(P_LL.shape==P_block.shape)
-P = {'LL':P_LL,'block':P_block}
+P = {'Image':P_LL,'Category':P_block}
 
     
 if plots[1]:
